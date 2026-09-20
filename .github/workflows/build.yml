@@ -10,16 +10,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    # 1. 先拉取你当前的工具链代码
+    # 1. 拉取你当前的工具链代码
     - name: Checkout AutoBuild Tools
       uses: actions/checkout@v4
 
-    # 2. 关键步骤：把 FongMi/TV 官方的源码拉取到当前目录下的 TV 文件夹中
+    # 2. 拉取 FongMi/TV 官方源码
     - name: Checkout FongMi TV Source
       uses: actions/checkout@v4
       with:
         repository: 'FongMi/TV'
-        path: 'TV' # 将官方源码下载到 TV 目录
+        path: 'TV'
 
     # 3. 配置 Java 环境
     - name: Set up JDK 17
@@ -28,17 +28,23 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    # 4. 进入 TV 目录赋予执行权限
+    # 4. 【修复核心】在 TV 目录下生成一个基础的 local.properties 文件，防止 gradle 报错崩溃
+    - name: Create local.properties
+      run: |
+        echo "sdk.dir=/usr/local/lib/android/sdk" > ./TV/local.properties
+        touch ./TV/app/local.properties
+
+    # 5. 进入 TV 目录赋予执行权限
     - name: Grant execute permission for gradlew
       run: chmod +x ./TV/gradlew
 
-    # 5. 进入 TV 目录并执行编译
+    # 6. 进入 TV 目录并执行编译
     - name: Build Release APK
       run: |
         cd TV
         ./gradlew assembleRelease --no-daemon
 
-    # 6. 收集并上传生成的 APK
+    # 7. 收集并上传生成的 APK
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
